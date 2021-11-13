@@ -11,9 +11,9 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 
 
 Route::resource('{id_doctor}/pacientes',PacientesController::class)->middleware('auth');
-/*
+
 Route::post('pacientes/{id}',[PacientesController::class,'store'])->name('pacientes.store')->middleware('auth');
-Route::get('{id_doctor}/paciente',[PacientesController::class,'index'])->name('pacientes.index')->middleware('auth');
+/*Route::get('{id_doctor}/paciente',[PacientesController::class,'index'])->name('pacientes.index')->middleware('auth');
 */
 Route::get('{id_doctor}/pacientes/{paciente}/historial',
             [PacientesController::class,'history'])->name('pacientes.history')
@@ -28,7 +28,9 @@ Route::post('{id_doctor}/pacientes/{paciente}/actividades/update',
             [PacientesController::class,'activity_update'])
             ->name('pacientes.activity_update')->middleware('auth');
 
-
+Route::post('{id_doctor}/pacientes/',
+            [PacientesController::class,'search'])
+            ->name('pacientes.search')->middleware('auth');
 
 
 

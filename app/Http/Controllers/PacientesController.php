@@ -35,9 +35,9 @@ class PacientesController extends Controller
             'enfermedades' => implode(',', $request->enfermedades) ?? 'Ninguna',
             'id_doctor' => $id
         ]);
-        $id = $paciente->id;
+        $id_paciente = $paciente->id;
         ProcesosCognitivos::create([
-            'id_paciente' => $id,
+            'id_paciente' => $id_paciente,
             'orientacion' => $request->orientacion,
             'atencion_concentracion' => $request->atencion_concentarcion,
             'memoria' => $request->memoria,
@@ -47,7 +47,6 @@ class PacientesController extends Controller
         ]);
         return redirect()->route('pacientes.index', $id);
     }
-
     public function show($id, Pacientes $paciente)
     {
         $cognicion = ProcesosCognitivos::where('id_paciente', $paciente->id)->get();
@@ -57,7 +56,7 @@ class PacientesController extends Controller
 
         $activity = Historial::where('id_paciente', $paciente->id)->get();
         if (count($activity) > 0) {
-            $activity = $activity[count($activity)-1];
+            $activity = $activity[count($activity) - 1];
         }
 
         $activity = collect($activity);
@@ -73,7 +72,7 @@ class PacientesController extends Controller
                 $buscar = [$value];
             }
             for ($i = 0; $i < count($buscar); $i++) {
-                $act = Actividad::select('id','nombre','especializa','grado','descripcion')->where('especializa', '=', $campo)->where('id', '=', $buscar[$i])->get();
+                $act = Actividad::select('id', 'nombre', 'especializa', 'grado', 'descripcion')->where('especializa', '=', $campo)->where('id', '=', $buscar[$i])->get();
                 $item->add($act);
             }
             $activitys->add($item);
@@ -83,18 +82,50 @@ class PacientesController extends Controller
             }
         }
         $activity = $activitys;
-        return view('Pacientes.show',compact('paciente','cognicion','activity'));
+        return view('Pacientes.show', compact('paciente', 'cognicion', 'activity'));
     }
-
     public function history($id, Pacientes $paciente)
     {
         $total = ProcesosCognitivos::where('id_paciente', $paciente->id)->get();
         $first = $total[0];
         $last = $total[count($total) - 1];
         $actividades = Historial::where('id_paciente', $paciente->id)->orderBy('id', 'DESC')->get();
-        
-        return view('Pacientes.historial', compact('paciente', 'total', 'first', 'last','actividades'));
+        $nombres = ['orientacion', 'atencion_concentracion', 'memoria', 'funciones_ejecutivas', 'lenguaje', 'percepcion'];
+        $actividades = collect($actividades);
+        $new_actividades = collect();
+        foreach ($actividades as $key => $value) {
+            $cont = 0;
+            $item = collect();
+            $value = collect($value);
+            foreach ($value as $llave => $valor) {
+                $campo = $nombres[$cont];
+                if ($llave == $campo) {
+                    if (strpos($valor, ',')) {
+                        $buscar = explode(',', $valor);
+                    } else {
+                        $buscar = [$valor];
+                    }
 
+                    $cont = $cont + 1;
+                    $fecha = $value->get('created_at');
+                    for ($i = 0; $i < count($buscar); $i++) {
+                        $act = Actividad::select('id', 'nombre', 'especializa', 'grado', 'descripcion')->find($valor);
+                        if ($act != Null) {
+                            $act = collect($act);
+                            $act->push($fecha);
+                            $item->add($act);
+                           
+                        }
+                    }
+                }
+                if ($cont == 6) {
+                    $new_actividades->add($item);
+                    break;
+                }
+            }
+        }
+        //return $new_actividades;
+        return view('Pacientes.historial', compact('paciente', 'total', 'first', 'last', 'new_actividades'));
     }
     public function set_activity($id, Pacientes $paciente)
     {
@@ -131,6 +162,17 @@ class PacientesController extends Controller
             'lenguaje' => (Arr::exists($request, 'Lenguaje')) ? implode(',', $request->Lenguaje) : '',
             'percepcion' => (Arr::exists($request, 'Percepcion')) ? implode(',', $request->Percepcion) : ''
         ]);
-        return Redirect()->route('pacientes.show',['id_doctor'=>$id_doctor,'paciente'=> $id]);
+        return Redirect()->route('pacientes.show', ['id_doctor' => $id_doctor, 'paciente' => $id]);
+    }
+    public function search($id, Request $request)
+    {
+        if ($request->ajax()) {
+            $pacientes = Pacientes::where($request->buscar_por, 'LIKE', '%' . $request->buscar . '%')->paginate(5);
+            return view('Pacientes.plantilla', compact('pacientes'))->render();
+        }
+        //return response(json_encode($pacientes),200)->header('Content-type','text/plain');
+    }
+    public function edit($id, Pacientes $paciente){
+        return view('Pacientes.edit',compact('paciente'));
     }
 }

@@ -9,39 +9,44 @@
         <div class="row justify-content-between">
             <div class="col-12">
                 <label class="form-label">Nombre</label>
-                <input type="text" name="nombre" class="form-control" />
+                <input type="text" name="nombre" class="form-control" value="{{ $paciente->nombre }}" />
             </div>
 
             <div class="col-sm- 12 col-md-3">
                 <label class="form-label">Fecha Nacimiento</label>
-                <input type="date" name="fecha_nacimiento" class="form-control" />
+                <input type="date" name="fecha_nacimiento" class="form-control"
+                    value="{{ date('Y-m-d', strtotime($paciente->fecha_nacimiento)) }}" />
             </div>
             <div class="col-sm- 12 col-md-3">
                 <label class="form-label">Genero</label>
                 <select class="form-control" name="genero" id="">
-                    <option value="H">Hombre</option>
-                    <option value="M">Mujer</option>
+                    <option {{ $paciente->genero == 'H' ? 'selected' : '' }} value="H">Hombre</option>
+                    <option {{ $paciente->genero == 'M' ? 'selected' : '' }} value="M">Mujer</option>
                 </select>
             </div>
             <div class="col-sm- 12 col-md-3">
                 <label class="form-label">Grado Escolar</label>
                 <select class="form-control" name="escolaridad" id="">
-                    <option value="Sin estudios">Sin Estidudios</option>
-                    <option value="Primaria">Primaria</option>
-                    <option value="Secundaria">Secundaria</option>
-                    <option value="Preparatoria">Preparatoria</option>
-                    <option value="Universidad">Universidad</option>
-                    <option value="Posgrado">Posgrado</option>
+                    <option {{ $paciente->escolaridad == 'Sin estudios' ? 'selected' : '' }} value="Sin estudios">Sin
+                        Estidudios</option>
+                    <option {{ $paciente->escolaridad == 'Primaria' ? 'selected' : '' }} value="Primaria">Primaria</option>
+                    <option {{ $paciente->escolaridad == 'Secundaria' ? 'selected' : '' }} value="Secundaria">Secundaria
+                    </option>
+                    <option {{ $paciente->escolaridad == 'Preparatoria' ? 'selected' : '' }} value="Preparatoria">
+                        Preparatoria</option>
+                    <option {{ $paciente->escolaridad == 'Universidad' ? 'selected' : '' }} value="Universidad">Universidad
+                    </option>
+                    <option {{ $paciente->escolaridad == 'Posgrado' ? 'selected' : '' }} value="Posgrado">Posgrado
+                    </option>
                 </select>
             </div>
             <div class="col-sm- 12 col-md-3">
                 <label class="form-label" for="enfermedad">Enfermedad Padecida</label>
-                <input class="form-control" type="text" name="enfermedad">
+                <input class="form-control" type="text" name="enfermedad" value="{{ $paciente->enfermedad }}">
             </div>
         </div>
 
         <hr />
-
         <h3>Procesos Cognitivos</h3>
         <div class="row">
             <div class="col-sm- 12 col-md-3">
@@ -103,13 +108,20 @@
         </div>
 
         <hr />
-
+        {{ $paciente->enfermedades }}
         <h3>Otras Enfermedades</h3>
 
         <div id="formulario">
-            <button type="button" id="agregar" class="clonar btn btn-secondary btn-sm">+</button>
-            <label for="agregar">Agregar Enfermedad</label>
-
+            <button type="button" class="clonar btn btn-secondary btn-sm">+</button>
+            <label for="enfermedades">Agregar Enfermedad</label>
+            @foreach (explode(',', $paciente->enfermedades) as $item)
+            @php($valor = $item)
+                <div class="input-group" id="{{ $item }}">
+                    <input type="text" class="form-control col-md-6" name="enfermedades[]" value={{ $item }}>
+                    <span class="btn btn-danger" onclick="eliminar(<?php echo $valor ?>)">X</span>
+                    <br>
+                </div>
+            @endforeach
         </div>
         <br />
 
@@ -117,63 +129,27 @@
     </form>
     <br>
     <script>
-        var cont = 0;
-
-        function eliminar(eliminar) {
-            let elemento = document.getElementById(eliminar);
-            elemento.parentNode.removeChild(elemento);
+        function eliminar(eliminar){
+            console.log(eliminar.id);
+            let elemento = document.getElementById(eliminar.id);
+            let padre = elemento.parentNode;
+            padre.removeChild(elemento);
         }
         $('.clonar').click(function() {
             // Clona el .input-group
-            //let $clone = $('#formulario .input-group').last().clone();
-            let form = document.getElementById('formulario');
-            var div = document.createElement("div");
-            var input = document.createElement("input");
-            var span = document.createElement("span");
+            var $clone = $('#formulario .input-group').last().clone();
 
-            input.type = "text";
-            input.name = 'enfermedades[]';
-            input.placeholder = 'Nombre Enfermedad';
-            input.className = "form-control col-md-6";
-            input.setAttribute("id", 'enfermedades');
-
-            span.className = "btn btn-danger";
-
-            input.type = "text";
-            input.name = 'enfermedades[]';
-            input.placeholder = 'Nombre Enfermedad';
-            input.className = "form-control col-md-6";
-            input.setAttribute("id", 'enfermedades');
-
-            span.className = "btn btn-danger";
-            span.textContent = 'X';
-            let numero = cont;
-            span.addEventListener("click", function() {
-                eliminar(numero)
-            }, false);
-
-            div.className = 'input-group';
-            div.setAttribute('id', cont);
-            div.appendChild(input);
-            div.appendChild(span);
-            form.appendChild(div);
-
-            cont = cont + 1;
-
-            /*
-              // Borra los valores de los inputs clonados
-              $clone.find(':input').each(function () {
+            // Borra los valores de los inputs clonados
+            $clone.find(':input').each(function() {
                 if ($(this).is('select')) {
-                  this.selectedIndex = 0;
+                    this.selectedIndex = 0;
                 } else {
-                  this.value = '';
+                    this.value = '';
                 }
-              });
+            });
 
-              $clone.id = (parseInt(Object.keys(anterior)[0]) + 1).toString();
-              console.log($clone);
-              // Agrega lo clonado al final del #formulario
-              $clone.appendTo('#formulario');*/
+            // Agrega lo clonado al final del #formulario
+            $clone.appendTo('#formulario');
         });
     </script>
 @endsection

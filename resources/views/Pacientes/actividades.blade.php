@@ -9,7 +9,7 @@
     <br>
     <div class="row">
         <h4>Aviso si usted desmarca todas las casillas y envia el formulario no asignara ninguna actividad</h4>
-        <h5>Actividades Actuales</h5>
+        <h5>Actividades Actuales Disponibles</h5>
     </div>
     <hr>
     <div class="row">
